@@ -6,8 +6,6 @@ import { env } from './config/env.js';
 import { configureCloudinary } from './config/cloudinary.js';
 import { seedDefaultSlabs } from './services/pricing.service.js';
 
-dns.setServers(["1.1.1.1", "8.8.8.8"]);
-
 if (!process.env.MONGODB_URI) {
   throw new Error('MONGODB_URI is missing from environment');
 }
