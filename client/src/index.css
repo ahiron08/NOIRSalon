@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --gold: #d4af37;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    margin: 0;
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgba(212, 175, 55, 0.35);
+    color: #ffffff;
+  }
+
+  /* TEMPORARILY DISABLED FOR DEBUGGING */
+  /* hide native cursor on precise pointers (custom cursor takes over) */
+  /* @media (pointer: fine) {
+    body,
+    a,
+    button,
+    [data-cursor] {
+      cursor: none;
+    }
+  } */
+
+  /* slim luxury scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #000000;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1c1c1c;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #333333;
+  }
+}
+
+/* ---- Lenis smooth scroll ---- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ---- Reusable luxury utilities ---- */
+@layer components {
+  .container-noir {
+    @apply mx-auto w-full max-w-[1440px] px-6 md:px-12 lg:px-16;
+  }
+
+  /* serif display heading */
+  .font-display {
+    @apply font-serif font-light tracking-[0.04em];
+  }
+
+  /* small all-caps eyebrow */
+  .eyebrow {
+    @apply text-[0.7rem] uppercase tracking-[0.42em] text-noir-muted md:text-xs;
+  }
+
+  /* gold button glow on hover */
+  .gold-glow {
+    box-shadow: 0 0 0 rgba(212, 175, 55, 0);
+    transition: box-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .gold-glow:hover {
+    box-shadow:
+      0 0 45px rgba(212, 175, 55, 0.35),
+      0 0 18px rgba(212, 175, 55, 0.25),
+      inset 0 0 0 1px rgba(212, 175, 55, 0.6);
+  }
+
+  /* text reveal underline animation */
+  .nav-link {
+    @apply relative text-[0.8rem] tracking-[0.08em] text-white/80 transition-colors duration-500 hover:text-white;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--gold), rgba(212, 175, 55, 0.2));
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-link:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  /* glass card */
+  .glass {
+    @apply border border-white/10 bg-white/[0.04] backdrop-blur-md;
+  }
+}
