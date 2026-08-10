@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
+import { apiFetch } from '../services/api.js';
 
 export default function Reservations() {
   const [services, setServices] = useState([]);
@@ -24,12 +25,12 @@ export default function Reservations() {
     (async () => {
       try {
         const [svcRes, stylistRes] = await Promise.all([
-          fetch('/api/v1/content/services'),
-          fetch('/api/v1/content/stylists')
+          apiFetch('/content/services'),
+          apiFetch('/content/stylists')
         ]);
         const [svcData, stylistData] = await Promise.all([
-          svcRes.json(),
-          stylistRes.json()
+          svcRes,
+          stylistRes
         ]);
         setServices(svcData.data || []);
         setStylists(stylistData.data || []);
@@ -46,8 +47,8 @@ export default function Reservations() {
     }
     (async () => {
       try {
-        const res = await fetch(`/api/v1/appointments/slots?date=${form.date}&stylist=${form.stylist}`);
-        const json = await res.json();
+        const json = await apiFetch(`/appointments/slots?date=${form.date}&stylist=${form.stylist}`);
+        // json already parsed by apiFetch
         setAvailableSlots(json.taken || []);
       } catch (e) {
         console.error('Failed to load slots', e);
@@ -67,7 +68,7 @@ export default function Reservations() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/appointments/book', {
+      const res = await apiFetch('/appointments/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -77,7 +78,7 @@ export default function Reservations() {
         }),
         credentials: 'include'
       });
-      if (res.ok) {
+      if (res) {
         setSubmitted(true);
       }
     } catch (e) {

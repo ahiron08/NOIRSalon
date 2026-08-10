@@ -2,10 +2,11 @@
 import { motion } from 'framer-motion';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
+import { apiFetch } from '../services/api.js';
 
 export default function Membership() {
   const [plans, setPlans] = useState([]);
-  useEffect(() => { fetch('/api/v1/content/memberships').then((r) => r.json()).then((j) => setPlans(j.data || [])); }, []);
+  useEffect(() => { apiFetch('/content/memberships').then((j) => setPlans(j.data || [])).catch(() => {}); }, []);
   return (
     <>
       <PageHeader title="Membership" subtitle="Privileges" />

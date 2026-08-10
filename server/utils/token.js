@@ -20,6 +20,10 @@ export function cookieOptions() {
     expires: new Date(Date.now() + config.jwt.cookieExpiresIn),
     httpOnly: true,
     secure,
-    sameSite: 'lax',
+    // In production the frontend (Vercel) and the API (Render) are separate
+    // origins, so the auth cookie must be sent on cross-site requests. That
+    // requires SameSite=None (which in turn requires `Secure`, both already
+    // handled here). In dev everything is same-origin, so Lax is fine.
+    sameSite: secure ? 'none' : 'lax',
   };
 }

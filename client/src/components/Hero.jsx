@@ -21,7 +21,6 @@ export default function Hero({ play }) {
     <section id="home" className="relative h-screen overflow-hidden bg-black">
       <HeroVideo
         src="/videos/hero.mp4"
-        poster="/images/hero-poster.jpg"
         play={play}
         overlay="rgba(0,0,0,0.55)"
       />

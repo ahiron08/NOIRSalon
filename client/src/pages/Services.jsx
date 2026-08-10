@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
 import { BookButton } from '../components/Buttons.jsx';
+import { apiFetch } from '../services/api.js';
 
 const CATEGORIES = ['All', 'Hair', 'Hair Spa', 'Facial', 'Makeup', 'Nails', 'Body', 'Men'];
 
@@ -14,9 +15,9 @@ export default function Services() {
 
   useEffect(() => {
     (async () => {
-      const base = '/api/v1/content/services';
+      const base = '/content/services';
       const qs = active !== 'All' ? `?category=${encodeURIComponent(active.toLowerCase())}` : '';
-      const res = await fetch(base + qs).then((r) => r.json());
+      const res = await apiFetch(base + qs);
       setServices(res.data || []);
       setLoading(false);
     })();

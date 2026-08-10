@@ -2,10 +2,11 @@
 import { motion } from 'framer-motion';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
+import { apiFetch } from '../services/api.js';
 
 export default function Videos() {
   const [items, setItems] = useState([]);
-  useEffect(() => { fetch('/api/v1/content/videos').then((r) => r.json()).then((j) => setItems(j.data || [])); }, []);
+  useEffect(() => { apiFetch('/content/videos').then((j) => setItems(j.data || [])).catch(() => {}); }, []);
   return (
     <>
       <PageHeader title="Videos" subtitle="Cinematic" />

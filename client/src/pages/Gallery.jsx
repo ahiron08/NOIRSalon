@@ -4,6 +4,7 @@ import { FaInstagram } from 'react-icons/fa';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
 
+import { apiFetch } from '../services/api.js';
 const FILTERS = ['All', 'hair', 'makeup', 'bridal', 'facial', 'nail', 'men'];
 
 export default function Gallery() {
@@ -14,10 +15,10 @@ export default function Gallery() {
 
   useEffect(() => {
     (async () => {
-      const base = '/api/v1/content/gallery';
+      const base = '/content/gallery';
       const qs = filter !== 'All' ? `?category=${filter}` : '';
       try {
-        const res = await fetch(base + qs).then((r) => r.json());
+        const res = await apiFetch(base + qs);
         setItems(res.data || []);
       } catch (err) {
         console.error('Failed to load gallery:', err);
@@ -29,7 +30,7 @@ export default function Gallery() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/v1/content/instagram?limit=12').then((r) => r.json());
+        const res = await apiFetch('/content/instagram?limit=12');
         setFeed(res && res.success ? res : null);
       } catch (err) {
         console.error('Failed to load Instagram feed:', err);

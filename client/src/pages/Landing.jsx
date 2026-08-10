@@ -27,7 +27,6 @@ export default function Landing() {
         <SplashScreen
           key="splash"
           videoSrc="/videos/intro.mp4"
-          poster="/images/intro-poster.jpg"
         />
       )}
     </main>

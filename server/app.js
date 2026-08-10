@@ -73,6 +73,23 @@ app.use('/api/v1', api);
 // ---- health ----
 app.get('/health', (_req, res) => res.json({ success: true, env: config.env }));
 
+// ---- root ----
+// When the built SPA is present we serve index.html at "/" (single-origin
+// deployment). In an API-only deployment (frontend hosted separately, e.g. on
+// Vercel, and no client/dist present here) return a clear JSON health payload
+// instead of a confusing generic 404.
+app.get('/', (_req, res) => {
+  if (clientDistExists) {
+    return res.sendFile(path.join(clientDist, 'index.html'));
+  }
+  res.json({
+    success: true,
+    message: 'NOIR Salon API is running',
+    service: 'NOIR SALON API',
+    env: config.env,
+  });
+});
+
 // ---- production: serve the built client (single-origin deployment) ----
 // The bundled React app lives at ../client/dist. When present we serve it
 // statically and fall back to index.html for SPA routes (/, /services, /admin…).

@@ -2,10 +2,11 @@
 import { motion } from 'framer-motion';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
+import { apiFetch } from '../services/api.js';
 
 export default function Testimonials() {
   const [items, setItems] = useState([]);
-  useEffect(() => { fetch('/api/v1/content/testimonials').then((r) => r.json()).then((j) => setItems(j.data || [])); }, []);
+  useEffect(() => { apiFetch('/content/testimonials').then((j) => setItems(j.data || [])).catch(() => {}); }, []);
   return (
     <>
       <PageHeader title="Testimonials" subtitle="Kind Words" />

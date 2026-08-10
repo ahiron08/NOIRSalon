@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
+import { apiFetch } from '../services/api.js';
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);
-  useEffect(() => { fetch('/api/v1/content/blogs').then((r) => r.json()).then((j) => setPosts(j.data || [])); }, []);
+  useEffect(() => { apiFetch('/content/blogs').then((j) => setPosts(j.data || [])).catch(() => {}); }, []);
   return (
     <>
       <PageHeader title="Journal" subtitle="NOIR Editorial" />

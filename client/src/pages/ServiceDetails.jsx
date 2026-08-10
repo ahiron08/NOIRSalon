@@ -4,14 +4,15 @@ import { useParams, Link } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
 import { BookButton } from '../components/Buttons.jsx';
+import { apiFetch } from '../services/api.js';
 
 export default function ServiceDetails() {
   const { slug } = useParams();
   const [service, setService] = useState(null);
   useEffect(() => {
     (async () => {
-      const res = await fetch('/api/v1/content/services/by-slug/' + slug);
-      const json = await res.json();
+      const json = await apiFetch('/content/services/by-slug/' + slug);
+      // json already parsed by apiFetch
       setService(json.data);
     })();
   }, [slug]);

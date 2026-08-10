@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
+import { apiFetch } from '../services/api.js';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -10,8 +11,7 @@ export default function BlogPost() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/v1/content/blogs/by-slug/${slug}`);
-        const json = await res.json();
+        const json = await apiFetch(`/content/blogs/by-slug/${slug}`);
         setPost(json.data);
       } catch (e) {
         console.error('Failed to load post', e);
