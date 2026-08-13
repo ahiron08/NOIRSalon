@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { GiHamburgerMenu } from 'react-icons/gi';
 import { IoClose } from 'react-icons/io5';
+import { FaShoppingBag } from 'react-icons/fa';
 import { Magnetic } from './Buttons.jsx';
+import { useCart } from '../contexts/CartContext.jsx';
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -22,6 +24,7 @@ export default function Navbar({ visible = true }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { count } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -69,6 +72,20 @@ export default function Navbar({ visible = true }) {
 
           {/* book now + mobile toggle */}
           <div className="flex items-center gap-4">
+            <Link
+              to="/cart"
+              data-cursor
+              aria-label="View cart"
+              className="relative flex h-11 w-11 items-center justify-center border border-white/15 text-white transition-colors duration-500 hover:border-noir-gold hover:text-noir-gold"
+            >
+              <FaShoppingBag className="text-base" />
+              {count > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-noir-gold px-1 text-[0.6rem] font-bold text-black">
+                  {count}
+                </span>
+              )}
+            </Link>
+
             <Magnetic strength={0.25} className="hidden md:inline-block">
               <Link
                 to="/reservations"

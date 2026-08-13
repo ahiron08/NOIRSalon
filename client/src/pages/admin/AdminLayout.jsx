@@ -32,7 +32,7 @@ export default function AdminLayout() {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      navigate('/admin/login');
+      navigate('/home');
     }
   };
 
@@ -91,7 +91,7 @@ export default function AdminLayout() {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white/70 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white/70 bg-white/10 border border-white/10 backdrop-blur-sm hover:text-red-400 hover:bg-red-500/20 hover:border-red-500/30 transition-all duration-300"
           >
             <span className="text-lg">🚪</span>
             <span className="tracking-wide">Logout</span>

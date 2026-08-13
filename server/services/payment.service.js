@@ -27,6 +27,10 @@ export class PaymentService {
         return this.#stripe(order, amount, currency, customer);
       case 'giftcard':
         return { provider: 'giftcard', status: 'pending_capture', reference: null };
+      case 'upi':
+        // QR is generated separately (qr.service) from the server-calculated
+        // amount; the order stays `pending` until payment is verified.
+        return { provider: 'upi', status: 'pending', reference: null, amount, currency };
       case 'cash':
       default:
         return { provider: 'cash', status: 'cash_on_delivery', reference: null, clientSecret: null };

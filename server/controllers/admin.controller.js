@@ -11,6 +11,7 @@ import AppError from '../utils/AppError.js';
 import catchAsync from '../utils/catchAsync.js';
 import { signToken, cookieOptions } from '../utils/token.js';
 import { createFactory } from './factory.js';
+import { dayStartIST, formatDateIST, todayISTString } from '../utils/salonTime.js';
 
 /** Admin login (separate Admin model + cookie). */
 export const login = catchAsync(async (req, res, next) => {
@@ -45,10 +46,20 @@ export const admins = createFactory(Admin, { searchFields: ['name', 'email'] });
 
 /** Aggregate analytics for the dashboard. */
 export const dashboard = catchAsync(async (_req, res) => {
+  // Day boundaries are computed in the salon's local timezone (Asia/Kolkata) so
+  // "today's appointments" stays correct regardless of the server's timezone.
+  const todayStart = dayStartIST(todayISTString());
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
   const [
     users,
     appointments,
     pendingAppointments,
+    todayAppointments,
+    confirmedAppointments,
+    inProgressAppointments,
+    completedAppointments,
+    cancelledAppointments,
     orders,
     revenue,
     products,
@@ -60,6 +71,17 @@ export const dashboard = catchAsync(async (_req, res) => {
     User.countDocuments({ role: 'user' }),
     Appointment.countDocuments(),
     Appointment.countDocuments({ status: 'pending' }),
+    Appointment.countDocuments({
+      $or: [
+        { startTime: { $gte: todayStart, $lt: todayEnd } },
+        { date: { $gte: todayStart, $lt: todayEnd } },
+      ],
+      status: { $nin: ['cancelled'] },
+    }),
+    Appointment.countDocuments({ status: { $in: ['confirmed', 'approved'] } }),
+    Appointment.countDocuments({ status: 'in_progress' }),
+    Appointment.countDocuments({ status: 'completed' }),
+    Appointment.countDocuments({ status: 'cancelled' }),
     Order.countDocuments(),
     Order.aggregate([
       { $match: { paymentStatus: { $in: ['paid'] } } },
@@ -72,13 +94,33 @@ export const dashboard = catchAsync(async (_req, res) => {
     Gallery.countDocuments({ active: true }),
   ]);
 
-  const recentAppointments = await Appointment.find().sort('-createdAt').limit(8).populate('user', 'name email phone');
+  const recentAppointments = await Appointment.find()
+    .sort('-createdAt')
+    .limit(8)
+    .populate('user', 'name email phone')
+    .populate('stylist', 'name')
+    .populate('services', 'name price offerPrice image');
   const recentOrders = await Order.find().sort('-createdAt').limit(8).populate('user', 'name email');
 
   res.json({
     success: true,
     data: {
-      counts: { users, appointments, pendingAppointments, orders, products, services, posts, subscribers, galleryCount },
+      counts: {
+        users,
+        appointments,
+        pendingAppointments,
+        todayAppointments,
+        confirmedAppointments,
+        inProgressAppointments,
+        completedAppointments,
+        cancelledAppointments,
+        orders,
+        products,
+        services,
+        posts,
+        subscribers,
+        galleryCount,
+      },
       revenue: revenue[0]?.total || 0,
       recentAppointments,
       recentOrders,

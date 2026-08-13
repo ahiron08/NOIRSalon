@@ -9,7 +9,7 @@ export default function AdminServices() {
         category: { type: 'text', label: 'Category ID' },
         price: { type: 'number', label: 'Price', required: true },
         offerPrice: { type: 'number', label: 'Offer Price' },
-        duration: { type: 'number', label: 'Duration (min)' },
+        duration: { type: 'number', label: 'Duration (min)', required: true, integer: true, min: 1, minMessage: 'at least 1 minute' },
         benefits: { type: 'textarea', label: 'Benefits (comma separated)' },
         suitableFor: { type: 'text', label: 'Suitable For' },
         showOnHome: { type: 'checkbox', label: 'Show on Home', default: false },

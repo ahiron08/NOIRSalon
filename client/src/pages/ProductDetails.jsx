@@ -3,25 +3,36 @@ import { motion } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
-import { BookButton } from '../components/Buttons.jsx';
 import { apiFetch } from '../services/api.js';
+import { useCart } from '../contexts/CartContext.jsx';
 
 export default function ProductDetails() {
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
   const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
 
   useEffect(() => {
     (async () => {
       try {
         const json = await apiFetch(`/content/products/by-slug/${slug}`);
-        // json already parsed by apiFetch
         setProduct(json.data);
       } catch (e) {
         console.error('Failed to load product', e);
       }
     })();
   }, [slug]);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!product) return;
+    try {
+      await addItem(product._id, qty);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+    } catch { /* ignore */ }
+  };
 
   if (!product) return <div className="min-h-screen bg-black" />;
 
@@ -69,7 +80,15 @@ export default function ProductDetails() {
               </div>
             </div>
             {product.stock > 0 ? (
-              <div className="mt-8"><BookButton label="Add to Cart" href={`/products/${product.slug}`} delay={0} /></div>
+              <div className="mt-8">
+                <button
+                  onClick={handleAdd}
+                  data-cursor
+                  className="inline-flex items-center justify-center gap-3 border border-noir-gold/60 px-10 py-4 text-[0.72rem] font-medium uppercase tracking-[0.28em] text-noir-gold transition-all duration-500 hover:bg-noir-gold hover:text-black"
+                >
+                  {added ? 'Added ✓' : 'Add to Cart'}
+                </button>
+              </div>
             ) : (
               <span className="mt-8 inline-block text-xs uppercase tracking-wider text-noir-muted">Out of Stock</span>
             )}

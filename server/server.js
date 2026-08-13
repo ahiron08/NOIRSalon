@@ -1,4 +1,5 @@
 import "dotenv/config";
+import dns from "node:dns";
 import app from "./app.js";
 
 import {
@@ -9,6 +10,12 @@ import {
 import { env } from "./config/env.js";
 import { configureCloudinary } from "./config/cloudinary.js";
 import { seedDefaultSlabs } from "./services/pricing.service.js";
+
+// Use reliable public DNS servers for MongoDB Atlas SRV resolution
+dns.setServers([
+    "8.8.8.8",      // Google DNS
+    "1.1.1.1"       // Cloudflare DNS
+]);
 
 if (!process.env.MONGODB_URI) {
     throw new Error("MONGODB_URI is missing from environment");
@@ -101,6 +108,8 @@ function listenWithRetry(port, attempt = 1) {
 
 const startServer = async () => {
     try {
+        console.log("Using DNS servers:", dns.getServers());
+
         await connectToDatabase();
 
         configureCloudinary();

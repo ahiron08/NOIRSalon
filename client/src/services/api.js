@@ -14,7 +14,9 @@ api.interceptors.response.use(
   (err) => {
     const msg = err.response?.data?.message || err.message || 'Network error';
     if (err.response?.status === 401) localStorage.removeItem('token');
-    return Promise.reject(new Error(msg));
+    const e = new Error(msg);
+    e.status = err.response?.status;
+    return Promise.reject(e);
   }
 );
 
@@ -52,7 +54,9 @@ adminApi.interceptors.response.use(
   (r) => r.data,
   (err) => {
     const msg = err.response?.data?.message || err.message || 'Network error';
-    return Promise.reject(new Error(msg));
+    const e = new Error(msg);
+    e.status = err.response?.status;
+    return Promise.reject(e);
   }
 );
 
@@ -64,5 +68,90 @@ export async function uploadAdminImage(file, fieldname = 'image') {
   if (res.success && res.url) return { url: res.url, public_id: res.public_id };
   throw new Error(res.message || 'Image upload failed');
 }
+
+/*
+ * Order API — reuses the configured `api` (user) / `adminApi` (admin) instances
+ * so auth conventions and interceptors stay consistent. All handlers resolve to
+ * the inner `data` payload.
+ */
+export const ordersApi = {
+  create(payload) {
+    // resolves to the full body { success, intent, payment, data: order }
+    return api.post('/orders', payload).then((r) => r);
+  },
+  mine() {
+    return api.get('/orders/mine').then((r) => r.data);
+  },
+  getOne(id) {
+    return api.get(`/orders/mine/${id}`).then((r) => r.data);
+  },
+  paymentInfo(id, sessionId) {
+    return api
+      .get(`/orders/payment/${id}`, { params: sessionId ? { sessionId } : {} })
+      .then((r) => r.data);
+  },
+  paymentStatus(id, sessionId) {
+    return api
+      .get(`/orders/payment/${id}/status`, { params: sessionId ? { sessionId } : {} })
+      .then((r) => r.data);
+  },
+};
+
+/*
+ * Reservation / appointment API (customer-side).
+ */
+export const reservationsApi = {
+  mine() {
+    return api.get('/appointments/mine').then((r) => r.data);
+  },
+  getOne(id) {
+    return api.get(`/appointments/mine/${id}`).then((r) => r.data);
+  },
+  cancel(id) {
+    return api.patch(`/appointments/mine/${id}/cancel`).then((r) => r.data);
+  },
+  /**
+   * Bookable start times for a stylist + service on a date.
+   * Resolves to the availability payload (duration, availableSlots, …).
+   */
+  availability(params) {
+    return api.get('/appointments/availability', { params }).then((r) => r.data);
+  },
+  /** Create a reservation. Resolves to the full body { success, data }.
+   *  Rejects with .status === 409 on a booking collision. */
+  book(payload) {
+    return api.post('/appointments/book', payload).then((r) => r);
+  },
+};
+
+/*
+ * Admin order/reservation API — routed through `adminApi` (adminToken cookie).
+ */
+export const adminOrdersApi = {
+  all() {
+    return adminApi.get('/admin/orders').then((r) => r.data);
+  },
+  updateStatus(id, status) {
+    return adminApi.patch(`/admin/orders/${id}/status`, { status }).then((r) => r.data);
+  },
+  markPayment(id, paymentStatus) {
+    return adminApi.patch(`/admin/orders/${id}/payment`, { paymentStatus }).then((r) => r.data);
+  },
+};
+
+export const adminReservationsApi = {
+  all() {
+    return adminApi.get('/admin/appointments').then((r) => r.data);
+  },
+  getOne(id) {
+    return adminApi.get(`/admin/appointments/${id}`).then((r) => r.data);
+  },
+  updateStatus(id, status, extra = {}) {
+    return adminApi.patch(`/admin/appointments/${id}/status`, { status, ...extra }).then((r) => r.data);
+  },
+  update(id, payload) {
+    return adminApi.patch(`/admin/appointments/${id}`, payload).then((r) => r.data);
+  },
+};
 
 

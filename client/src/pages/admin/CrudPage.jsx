@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../services/api.js';
 import ImageUpload from '../../components/admin/ImageUpload.jsx';
+import useTableControls from '../../hooks/useTableControls.js';
 
 const defaultFields = {
   name: { type: 'text', label: 'Name', required: true },
@@ -10,6 +11,23 @@ const defaultFields = {
   active: { type: 'checkbox', label: 'Active', default: true },
   featured: { type: 'checkbox', label: 'Featured', default: false },
 };
+
+/** Sortable column header with an indicator arrow. */
+function SortHeader({ label, name, activeKey, dir, onSort, align = 'left' }) {
+  const active = activeKey === name;
+  return (
+    <th className={`px-6 py-4 text-xs uppercase tracking-[0.2em] ${align === 'right' ? 'text-right' : 'text-left'}`}>
+      <button
+        type="button"
+        onClick={() => onSort(name)}
+        className={`inline-flex items-center gap-1.5 transition-colors ${active ? 'text-noir-gold' : 'text-noir-muted hover:text-noir-gold'}`}
+      >
+        {label}
+        <span className="text-[0.7em]">{active ? (dir === 'asc' ? '↑' : '↓') : '↕'}</span>
+      </button>
+    </th>
+  );
+}
 
 export default function CrudPage({
   title,
@@ -33,6 +51,34 @@ export default function CrudPage({
   const [notice, setNotice] = useState('');
 
   const mergedFields = { ...defaultFields, ...fields };
+
+  const {
+    rows,
+    query,
+    setQuery,
+    filterValues,
+    setFilter,
+    clearAll,
+    sortKey,
+    sortDir,
+    toggleSort,
+  } = useTableControls(items, {
+    searchFields: [
+      (i) => i.name || i.title || i.question || i.code || '',
+      (i) => i.slug || '',
+    ],
+    filters: {
+      active: (i) => (i.active ? 'active' : 'inactive'),
+      featured: (i) => (i.featured ? 'featured' : 'standard'),
+    },
+    sortAccessors: {
+      name: (i) => i.name || i.title || i.question || i.code || '',
+      active: (i) => (i.active ? 0 : 1),
+      featured: (i) => (i.featured ? 0 : 1),
+    },
+  });
+  const hasActiveControls =
+    query.trim() !== '' || Object.keys(filterValues).some((k) => filterValues[k] && filterValues[k] !== 'all');
 
   const showNotice = (msg) => {
     setNotice(msg);
@@ -70,14 +116,24 @@ export default function CrudPage({
   const validate = (data) => {
     const errors = {};
     Object.entries(mergedFields).forEach(([key, config]) => {
+      const val = data[key];
       if (config.required) {
-        const val = data[key];
         if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
           errors[key] = `${config.label || key} is required`;
         }
       }
-      if (config.type === 'number' && data[key] !== '' && data[key] !== undefined && data[key] !== null && Number.isNaN(Number(data[key]))) {
-        errors[key] = `${config.label || key} must be a number`;
+      if (config.type === 'number' && val !== '' && val !== undefined && val !== null) {
+        const num = Number(val);
+        if (Number.isNaN(num)) {
+          errors[key] = `${config.label || key} must be a number`;
+        } else {
+          if (config.integer && !Number.isInteger(num)) {
+            errors[key] = `${config.label || key} must be a whole number`;
+          }
+          if (config.min !== undefined && num < config.min) {
+            errors[key] = `${config.label || key} must be ${config.minMessage || `greater than or equal to ${config.min}`}`;
+          }
+        }
       }
     });
     return Object.keys(errors).length ? errors : null;
@@ -179,7 +235,7 @@ export default function CrudPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-4xl text-white mb-2">{title}</h1>
-          <p className="text-sm text-noir-muted">{items.length} items total</p>
+          <p className="text-sm text-noir-muted">{items.length} items total{hasActiveControls ? ` · ${rows.length} shown` : ''}</p>
         </div>
         <button
           onClick={handleCreate}
@@ -187,6 +243,42 @@ export default function CrudPage({
         >
           + Add New
         </button>
+      </div>
+
+      {/* Search + filter toolbar */}
+      <div className="flex flex-col gap-3 border border-white/10 bg-white/[0.02] p-4 lg:flex-row lg:items-center">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Search ${title.toLowerCase()}…`}
+          className="flex-1 bg-transparent border border-white/20 px-4 py-2.5 text-sm text-white placeholder:text-noir-muted focus:border-noir-gold focus:outline-none"
+        />
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={filterValues.active || 'all'}
+            onChange={(e) => setFilter('active', e.target.value)}
+            className="bg-neutral-900 border border-white/20 px-3 py-2.5 text-xs text-white focus:border-noir-gold focus:outline-none"
+          >
+            <option value="all">All Statuses</option>
+            <option value="active" className="bg-black">Active</option>
+            <option value="inactive" className="bg-black">Inactive</option>
+          </select>
+          <select
+            value={filterValues.featured || 'all'}
+            onChange={(e) => setFilter('featured', e.target.value)}
+            className="bg-neutral-900 border border-white/20 px-3 py-2.5 text-xs text-white focus:border-noir-gold focus:outline-none"
+          >
+            <option value="all">All Featured</option>
+            <option value="featured" className="bg-black">Featured</option>
+            <option value="standard" className="bg-black">Standard</option>
+          </select>
+          {hasActiveControls && (
+            <button onClick={clearAll} className="text-xs uppercase tracking-wider text-noir-muted hover:text-white transition-colors">
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {loadError ? (
@@ -205,14 +297,14 @@ export default function CrudPage({
             <table className="w-full">
               <thead className="border-b border-white/10 bg-white/[0.02]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs uppercase tracking-[0.2em] text-noir-muted">Name</th>
-                  <th className="px-6 py-4 text-left text-xs uppercase tracking-[0.2em] text-noir-muted">Status</th>
-                  <th className="px-6 py-4 text-left text-xs uppercase tracking-[0.2em] text-noir-muted">Featured</th>
+                  <SortHeader label="Name" name="name" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                  <SortHeader label="Status" name="active" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                  <SortHeader label="Featured" name="featured" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                   <th className="px-6 py-4 text-right text-xs uppercase tracking-[0.2em] text-noir-muted">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {items.map((item) => (
+                {rows.map((item) => (
                   <tr key={item._id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -251,10 +343,10 @@ export default function CrudPage({
                     </td>
                   </tr>
                 ))}
-                {items.length === 0 && (
+                {rows.length === 0 && (
                   <tr>
                     <td colSpan="4" className="px-6 py-12 text-center text-noir-muted text-sm">
-                      {emptyMessage}
+                      {items.length === 0 ? emptyMessage : 'No items match your filters'}
                     </td>
                   </tr>
                 )}

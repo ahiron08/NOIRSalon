@@ -10,7 +10,19 @@ const serviceSchema = new mongoose.Schema(
     images: [String],
     price: { type: Number, required: true, min: 0 },
     offerPrice: { type: Number, min: 0 },
-    duration: { type: Number, default: 45 }, // minutes
+    // Duration in MINUTES (integer, strictly positive) — the server uses this to
+    // compute appointment end times and availability. Stored as minutes (never a
+    // string like "1 hour") so arithmetic and validation stay reliable.
+    duration: {
+      type: Number,
+      required: true,
+      default: 45,
+      min: 1,
+      validate: {
+        validator: Number.isInteger,
+        message: 'Duration must be a whole number of minutes.',
+      },
+    },
     benefits: [String],
     steps: [String],
     suitableFor: String,

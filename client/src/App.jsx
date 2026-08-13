@@ -23,6 +23,10 @@ const Testimonials = lazy(() => import('./pages/Testimonials.jsx'));
 const Membership = lazy(() => import('./pages/Membership.jsx'));
 const GiftCards = lazy(() => import('./pages/GiftCards.jsx'));
 const Reservations = lazy(() => import('./pages/Reservations.jsx'));
+const CartPage = lazy(() => import('./pages/CartPage.jsx'));
+const Checkout = lazy(() => import('./pages/Checkout.jsx'));
+const Payment = lazy(() => import('./pages/Payment.jsx'));
+const MyOrders = lazy(() => import('./pages/MyOrders.jsx'));
 const Blog = lazy(() => import('./pages/Blog.jsx'));
 const BlogPost = lazy(() => import('./pages/BlogPost.jsx'));
 const Careers = lazy(() => import('./pages/Careers.jsx'));
@@ -118,6 +122,18 @@ export default function App() {
                 <Route path="/membership" element={<Membership />} />
                 <Route path="/gift-cards" element={<GiftCards />} />
                 <Route path="/reservations" element={<Reservations />} />
+                <Route path="/cart" element={<Layout />}>
+                  <Route index element={<CartPage />} />
+                </Route>
+                <Route path="/checkout" element={<Layout />}>
+                  <Route index element={<Checkout />} />
+                </Route>
+                <Route path="/payment/:orderId" element={<Layout />}>
+                  <Route index element={<Payment />} />
+                </Route>
+                <Route path="/my-orders" element={<Layout />}>
+                  <Route index element={<MyOrders />} />
+                </Route>
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/careers" element={<Careers />} />

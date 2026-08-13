@@ -22,6 +22,7 @@ import Faq from '../models/Faq.model.js';
 export const services = createFactory(Service, {
   populate: 'category',
   searchFields: ['name', 'description', 'category'],
+  categoryRef: Category,
 });
 
 export const categories = createFactory(Category, { searchFields: ['name'] });
@@ -36,6 +37,7 @@ export const stylists = createFactory(Stylist, { searchFields: ['name', 'role', 
 export const products = createFactory(Product, {
   populate: 'category',
   searchFields: ['name', 'brand', 'description'],
+  categoryRef: Category,
 });
 
 export const gallery = createFactory(Gallery, { searchFields: ['title', 'category'] });

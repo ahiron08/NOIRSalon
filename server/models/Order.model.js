@@ -28,6 +28,9 @@ const orderSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     guestEmail: String,
     guestPhone: String,
+    // Guest orders are scoped by the checkout session so the same guest can
+    // retrieve their own payment info without being able to fetch others'.
+    sessionId: String,
 
     items: [orderItemSchema],
 
@@ -42,7 +45,7 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ['cash', 'razorpay', 'stripe', 'giftcard'],
+      enum: ['cash', 'razorpay', 'stripe', 'giftcard', 'upi'],
       default: 'cash',
     },
     paymentStatus: {
@@ -51,6 +54,9 @@ const orderSchema = new mongoose.Schema(
       default: 'pending',
     },
     paymentRef: String,
+    // Historical UPI payment string (server built) used / re-renderable as a QR
+    // against the server-calculated `total`. Never editable by the client.
+    upiString: String,
     paidAt: Date,
 
     status: {

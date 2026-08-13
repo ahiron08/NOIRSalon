@@ -3,21 +3,49 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader.jsx';
 import Section from '../components/layout/Section.jsx';
-import { BookButton } from '../components/Buttons.jsx';
 import { apiFetch } from '../services/api.js';
-
-const CATEGORIES = ['All', 'Hair', 'Hair Spa', 'Facial', 'Makeup', 'Nails', 'Body', 'Men'];
+import { useCart } from '../contexts/CartContext.jsx';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
-  const [active, setActive] = useState('All');
+  const [categories, setCategories] = useState([]);
+  const [active, setActive] = useState('all');
   const [loading, setLoading] = useState(true);
+  const { addItem } = useCart();
+  const [added, setAdded] = useState({});
+
+  // Load real categories so the chips match the DB and filter by slug.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiFetch('/content/categories');
+        const items = (res.data || [])
+          .filter((c) => c.active !== false)
+          .map((c) => ({
+            name: c.name,
+            slug: c.slug || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          }));
+        setCategories(items);
+      } catch (e) {
+        console.error('Failed to load categories', e);
+      }
+    })();
+  }, []);
+
+  const handleAdd = async (productId) => {
+    try {
+      await addItem(productId, 1);
+      setAdded((prev) => ({ ...prev, [productId]: true }));
+      setTimeout(() => setAdded((prev) => ({ ...prev, [productId]: false })), 1500);
+    } catch { /* silently ignore */ }
+  };
 
   useEffect(() => {
     (async () => {
       try {
+        setLoading(true);
         const base = '/content/products';
-        const qs = active !== 'All' ? `?category=${encodeURIComponent(active.toLowerCase())}` : '';
+        const qs = active !== 'all' ? `?category=${encodeURIComponent(active)}` : '';
         const json = await apiFetch(base + qs);
         // json already parsed by apiFetch
         setProducts(json.data || []);
@@ -34,13 +62,19 @@ export default function Products() {
       <PageHeader title="Products" subtitle="Shop" />
       <Section>
         <div className="flex flex-wrap gap-3">
-          {CATEGORIES.map((c) => (
-            <button 
-              key={c} 
-              onClick={() => setActive(c)} 
-              className={`border px-5 py-2 text-xs uppercase tracking-[0.25em] transition-all duration-500 ${active === c ? 'border-noir-gold text-noir-gold' : 'border-white/20 text-noir-muted hover:text-white'}`}
+          <button
+            onClick={() => setActive('all')}
+            className={`border px-5 py-2 text-xs uppercase tracking-[0.25em] transition-all duration-500 ${active === 'all' ? 'border-noir-gold text-noir-gold' : 'border-white/20 text-noir-muted hover:text-white'}`}
+          >
+            All
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.slug}
+              onClick={() => setActive(c.slug)}
+              className={`border px-5 py-2 text-xs uppercase tracking-[0.25em] transition-all duration-500 ${active === c.slug ? 'border-noir-gold text-noir-gold' : 'border-white/20 text-noir-muted hover:text-white'}`}
             >
-              {c}
+              {c.name}
             </button>
           ))}
         </div>
@@ -49,6 +83,10 @@ export default function Products() {
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="aspect-[3/4] w-full animate-pulse bg-neutral-900" />
             ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="mt-10 border border-white/10 bg-white/[0.02] p-12 text-center text-noir-muted">
+            No products in this category yet.
           </div>
         ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -90,7 +128,13 @@ export default function Products() {
                     )}
                   </div>
                   {p.stock > 0 ? (
-                    <BookButton label="Add to Cart" href={`/products/${p.slug}`} delay={0} />
+                    <button
+                      onClick={() => handleAdd(p._id)}
+                      data-cursor
+                      className="mt-4 inline-flex items-center justify-center gap-2 border border-noir-gold/60 px-5 py-2.5 text-[0.68rem] font-medium uppercase tracking-[0.25em] text-noir-gold transition-all duration-500 hover:bg-noir-gold hover:text-black"
+                    >
+                      {added[p._id] ? 'Added ✓' : 'Add to Cart'}
+                    </button>
                   ) : (
                     <span className="mt-4 inline-block text-xs uppercase tracking-wider text-noir-muted">Out of Stock</span>
                   )}

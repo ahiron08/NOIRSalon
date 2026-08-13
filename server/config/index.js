@@ -27,6 +27,12 @@ export const config = {
   email: {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
+    // secure: true for implicit TLS on port 465; default to port-465 heuristic
+    // when SMTP_SECURE is not set, otherwise accept an explicit boolean.
+    secure:
+      process.env.SMTP_SECURE !== undefined && process.env.SMTP_SECURE !== ''
+        ? String(process.env.SMTP_SECURE).toLowerCase() === 'true'
+        : Number(process.env.SMTP_PORT) === 465,
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
     from: process.env.MAIL_FROM || 'NOIR SALON <no-reply@noirsalon.in>',
@@ -39,14 +45,31 @@ export const config = {
   },
 
   payment: {
-    provider: process.env.PAYMENT_PROVIDER || 'cash', // cash | razorpay | stripe | giftcard
+    provider: process.env.PAYMENT_PROVIDER || 'cash', // cash | razorpay | stripe | giftcard | upi
     razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+    upi: {
+      id: process.env.UPI_ID,
+      businessName: process.env.UPI_BUSINESS_NAME || 'NOIR SALON',
+      merchantId: process.env.UPI_MERCHANT_ID,
+      currency: process.env.UPI_CURRENCY || 'INR',
+    },
   },
 
   google: {
     placesApiKey: process.env.GOOGLE_PLACES_API_KEY,
     mapEmbed: process.env.GOOGLE_MAP_EMBED,
+  },
+
+  // Salon operations. There is no existing working-hours system, so we define a
+  // clear, env-configurable default. The defaults (10:00–19:00 with a 30-minute
+  // booking grid) match the working hours already implied by the existing booking
+  // UI. Override via SALON_OPEN_TIME / SALON_CLOSE_TIME / SALON_SLOT_INTERVAL_MINUTES.
+  salon: {
+    timezone: process.env.SALON_TIMEZONE || 'Asia/Kolkata',
+    openTime: process.env.SALON_OPEN_TIME || '10:00',
+    closeTime: process.env.SALON_CLOSE_TIME || '19:00',
+    slotIntervalMinutes: Number(process.env.SALON_SLOT_INTERVAL_MINUTES) || 30,
   },
 };

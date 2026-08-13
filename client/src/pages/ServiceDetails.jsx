@@ -37,7 +37,7 @@ export default function ServiceDetails() {
                 {service.benefits.map((b) => <li key={b} className="flex items-center gap-3"><span className="h-px w-6 bg-noir-gold/70" />{b}</li>)}
               </ul>
             )}
-            <div className="mt-8"><BookButton label="Book This Service" href="/reservations" /></div>
+            <div className="mt-8"><BookButton label="Book This Service" href={`/home/reservations?service=${service._id}`} /></div>
           </div>
         </div>
       </Section>

@@ -39,10 +39,12 @@ mountCrudAt(r, '/giftcards', giftCards);
 
 // ---- ops management ----
 r.get('/appointments', appts.getAll);
+r.get('/appointments/:id', appts.getOne);
 r.patch('/appointments/:id/status', appts.updateStatus);
 r.get('/orders', orders.getAllOrders);
 r.get('/orders/:id', orders.getOrder);
 r.patch('/orders/:id/status', orders.updateStatus);
+r.patch('/orders/:id/payment', orders.markPaymentStatus);
 r.get('/contacts', contact.listContacts);
 r.patch('/contacts/:id', contact.updateContact);
 r.delete('/contacts/:id', contact.deleteContact);

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/AppError.js';
 import APIFeatures from '../utils/apiFeatures.js';
@@ -33,10 +34,37 @@ async function cleanupReplacedMedia(oldDoc, newDoc) {
   );
 }
 
-export function createFactory(Model, { populate = '', searchFields = [] } = {}) {
+export function createFactory(Model, { populate = '', searchFields = [], categoryRef = null } = {}) {
   const list = catchAsync(async (req, res) => {
+    // Work on a copy so we never mutate the caller's req.query.
+    const queryString = { ...req.query };
+
+    // When the model stores `category` as an ObjectId reference, a raw string can
+    // never match it. Resolve the requested category (by slug, exact name, or a
+    // raw ObjectId) into the referenced Category _id before the generic filter
+    // runs. Used by /content/services & /content/products (& their admin routes).
+    if (categoryRef && queryString.category) {
+      const raw = String(queryString.category).trim();
+      const cat = await categoryRef
+        .findOne({
+          $or: [
+            { slug: raw.toLowerCase() },
+            { name: new RegExp(`^${raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+          ],
+        })
+        .select('_id')
+        .lean();
+      if (cat) {
+        queryString.category = cat._id;
+      } else if (!mongoose.isValidObjectId(raw)) {
+        // Unknown category name → force an empty result set (all-zeros ObjectId).
+        queryString.category = '000000000000000000000000';
+      }
+      // else: raw is already a valid ObjectId → keep it.
+    }
+
     let query = Model.find().populate(populate);
-    const features = new APIFeatures(query, req.query).search(searchFields).filter().sort().limitFields().paginate();
+    const features = new APIFeatures(query, queryString).search(searchFields).filter().sort().limitFields().paginate();
     const [data, meta] = await Promise.all([features.query, features.countTotal()]);
     res.json({ success: true, count: data.length, data, pagination: meta });
   });
